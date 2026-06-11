@@ -1,0 +1,18 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+
+[dev]
+  publish = "public"
+  functions = "netlify/functions"
+  port = 8888
+
+[[redirects]]
+  from = "/classement"
+  to = "/classement.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin"
+  to = "/index.html"
+  status = 200
