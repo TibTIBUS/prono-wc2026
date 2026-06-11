@@ -2,7 +2,8 @@ let state = {employees:[], matches:[], predictions:[], results:[]};
 function adminPassword(){return document.getElementById("adminPassword").value.trim();}
 function authHeaders(){return {"x-admin-password":adminPassword()};}
 async function loadData(){
-  try{state=await api("get-data"); renderAll(); document.getElementById("error").style.display="none";}
+  if(!adminPassword()){document.getElementById("error").textContent="Entre le mot de passe admin puis clique « Recharger les données ».";document.getElementById("error").style.display="block";return;}
+  try{state=await api("get-data",{headers:authHeaders()}); renderAll(); document.getElementById("error").style.display="none";}
   catch(e){document.getElementById("error").textContent=e.message; document.getElementById("error").style.display="block";}
 }
 function resultByMatch(id){return state.results.find(r=>r.match_id===id);}
@@ -41,4 +42,18 @@ async function importV3Json(){
 }
 async function exportData(){try{const data=await api("export-data",{headers:authHeaders()});const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="export-prono-wc2026.json";a.click();}catch(e){alert(e.message);}}
 async function renderRankingPreview(){try{const data=await api("get-ranking");document.getElementById("rankingPreview").innerHTML=data.ranking.map(r=>`<tr><td>${r.rank}</td><td>${escapeHtml(r.employee)}</td><td>${r.total}</td><td>${r.exact}</td><td>${r.good}</td></tr>`).join("");}catch(e){}}
-loadData();
+async function syncResults(){
+  if(!adminPassword())return alert("Entre le mot de passe admin.");
+  const msg=document.getElementById("message");
+  try{
+    msg.textContent="Synchronisation en cours...";msg.style.display="block";
+    const res=await api("sync-results",{method:"POST",headers:authHeaders()});
+    let txt=`Synchronisation terminée : ${res.saved} résultat(s) enregistré(s) sur ${res.fetched} match(s) terminé(s) côté API.`;
+    if(res.unmatched&&res.unmatched.length)txt+=`\n\nNon associés (${res.unmatched.length}) :\n- `+res.unmatched.join("\n- ");
+    msg.textContent="Synchronisation terminée. Voir le détail.";
+    await loadData();
+    alert(txt);
+  }catch(e){msg.style.display="none";alert("Erreur synchro : "+e.message);}
+}
+// Au chargement : pas d'appel get-data (protégé). On affiche juste l'aperçu public.
+renderRankingPreview();
