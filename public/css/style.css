@@ -27,4 +27,6 @@ tr.clickable{cursor:pointer;transition:background .15s}tr.clickable:hover{backgr
 .pt-exact{background:rgba(25,195,125,.22);color:#b6ffe0;border:1px solid rgba(25,195,125,.4)}
 .pt-good{background:rgba(245,176,65,.20);color:#ffe3ad;border:1px solid rgba(245,176,65,.4)}
 .pt-zero{background:rgba(255,91,91,.16);color:#ffd0d0;border:1px solid rgba(255,91,91,.3)}
-@media(max-width:850px){.topbar,.grid{display:block}.nav{margin-top:14px}.stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}.hero{padding:22px}.podium{grid-template-columns:1fr;gap:10px}.podium-spot.p-gold{padding-top:34px}}
+@media(max-width:850px){.topbar,.grid{display:block}.nav{margin-top:14px}.stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}.hero{padding:22px}.podium{display:none !important}.podium-spot.p-gold{padding-top:34px}}
+/* Logo crocodile : fond clair contrasté pour bien le distinguer */
+.logo.logo-croco{background:#f4f7fa;font-size:30px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
