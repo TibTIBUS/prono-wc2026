@@ -35,15 +35,34 @@ function pointsFor(pred, real) {
   if (outcome(pred.score_a, pred.score_b) === outcome(real.score_a, real.score_b)) return {points:2, exact:false, good:true};
   return {points:0, exact:false, good:false};
 }
+// Supabase/PostgREST plafonne CHAQUE requête select à 1000 lignes max.
+// Avec ~40 salariés x jusqu'à 72 matchs, la table predictions dépasse 1000
+// lignes : sans pagination, get-data n'en renverrait qu'une partie (au hasard),
+// d'où des pronos qui "disparaissent" et un classement faux. On pagine donc
+// jusqu'à tout récupérer.
+async function selectAll(supabase, table, applyOrder) {
+  const pageSize = 1000;
+  let from = 0;
+  let all = [];
+  while (true) {
+    let query = supabase.from(table).select("*").range(from, from + pageSize - 1);
+    if (applyOrder) query = applyOrder(query);
+    const { data, error } = await query;
+    if (error) throw error;
+    all = all.concat(data || []);
+    if (!data || data.length < pageSize) break;
+    from += pageSize;
+  }
+  return all;
+}
 async function loadAllData(supabase) {
-  const [employeesRes, matchesRes, predictionsRes, resultsRes] = await Promise.all([
-    supabase.from("employees").select("*").order("display_order", { ascending: true }).order("name", { ascending: true }),
-    supabase.from("matches").select("*").order("position", { ascending: true }),
-    supabase.from("predictions").select("*"),
-    supabase.from("results").select("*")
+  const [employees, matches, predictions, results] = await Promise.all([
+    selectAll(supabase, "employees", q => q.order("display_order", { ascending: true }).order("name", { ascending: true })),
+    selectAll(supabase, "matches", q => q.order("position", { ascending: true })),
+    selectAll(supabase, "predictions"),
+    selectAll(supabase, "results")
   ]);
-  for (const res of [employeesRes, matchesRes, predictionsRes, resultsRes]) if (res.error) throw res.error;
-  return {employees:employeesRes.data||[], matches:matchesRes.data||[], predictions:predictionsRes.data||[], results:resultsRes.data||[]};
+  return { employees, matches, predictions, results };
 }
 function buildRanking(data) {
   const resultsByMatch = new Map(data.results.map(r => [r.match_id, r]));
